@@ -1,0 +1,60 @@
+# add modules and functions here
+import numpy as np
+import matplotlib.pyplot as plt
+
+def integrate(x0=2, omega0=2, b=0.25, dt=0.01, nmax=10):
+    omega2 = omega0**2    # pre-compute the square
+    T0 = 2*np.pi/omega0   # harmonic period
+    Tmax = nmax * T0      # max sampling time
+
+    y = omega0
+    u = 0
+    t = 0
+    data = []
+    
+    
+    while t < Tmax:
+        # Euler
+
+        y = y + (dt * u)
+        u = u + (dt * (-2*b*u-omega2*y))
+        data.append((t, y, u))
+        t += dt
+    # return numpy array [t, theta, Omega]
+    # of shape (3 x N) (see doc string)
+    return np.transpose(data)
+
+
+def analytical_x(t, x0=2, omega0=2, b=0.25): 
+    omegaprime = np.sqrt(omega0**2 - b**2)
+    x = []
+    for i in np.array(t):
+        xt = x0*np.exp(-b*i)*np.cos(omegaprime*i)
+        x.append(xt)
+    return x
+    
+def RMSE(xhat, x):
+        rmse = np.sqrt(1/len(x) * sum((np.array(x)-np.array(xhat))**2))
+        return rmse
+
+if __name__ == "__main__":
+    # generate data
+    
+    data = integrate(1.0)
+    times, X, V = data
+    analytical = analytical_x(times, x0=2, omega0=2, b=0.25)
+
+    # plot
+    plt.figure()
+    plt.plot(times, X, label = 'Euler')
+    plt.plot(times, analytical, label = 'exact')
+    plt.xlabel('time t')
+    plt.ylabel('position x')
+    plt.title("Damped harmonic oscillator")
+    plt.legend()
+    plt.savefig("damped_oscillator.png")
+
+    # RMSE
+    
+    rmse = RMSE(X, analytical)
+    print('RMSE: ', '%.3f' %rmse)
